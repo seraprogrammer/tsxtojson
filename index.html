@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JSX/TSX to Registry JSON Converter</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            color: #2d3748;
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .header p {
+            color: #718096;
+            font-size: 1.1rem;
+        }
+
+        .converter-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        .input-section, .output-section {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 25px;
+            border: 2px solid #e2e8f0;
+            transition: all 0.3s ease;
+        }
+
+        .input-section:hover, .output-section:hover {
+            border-color: #667eea;
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.15);
+        }
+
+        .section-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .icon {
+            width: 24px;
+            height: 24px;
+            fill: #667eea;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            font-weight: 600;
+            color: #4a5568;
+            margin-bottom: 8px;
+            font-size: 0.95rem;
+        }
+
+        input, textarea, select {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            font-size: 0.95rem;
+            transition: all 0.3s ease;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        input:focus, textarea:focus, select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .jsx-input {
+            font-family: 'Courier New', monospace;
+            min-height: 300px;
+            resize: vertical;
+            background: #1a202c;
+            color: #e2e8f0;
+            border: 2px solid #4a5568;
+        }
+
+        .jsx-input:focus {
+            border-color: #667eea;
+        }
+
+        .json-output {
+            font-family: 'Courier New', monospace;
+            min-height: 400px;
+            resize: vertical;
+            background: #0d1117;
+            color: #58a6ff;
+            border: 2px solid #21262d;
+            white-space: pre-wrap;
+        }
+
+        .controls {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-secondary {
+            background: #e2e8f0;
+            color: #4a5568;
+        }
+
+        .btn-secondary:hover {
+            background: #cbd5e0;
+            transform: translateY(-2px);
+        }
+
+        .btn-success {
+            background: #48bb78;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #38a169;
+            transform: translateY(-2px);
+        }
+
+        .metadata-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .dependencies-section {
+            margin-bottom: 20px;
+        }
+
+        .dependencies-input {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .dependency-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .tag {
+            background: #667eea;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .tag-remove {
+            background: none;
+            border: none;
+            color: white;
+            cursor: pointer;
+            font-size: 0.9rem;
+            padding: 0;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .tag-remove:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .status {
+            text-align: center;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            font-weight: 600;
+            display: none;
+        }
+
+        .status.success {
+            background: #c6f6d5;
+            color: #22543d;
+            border: 2px solid #68d391;
+        }
+
+        .status.error {
+            background: #fed7d7;
+            color: #742a2a;
+            border: 2px solid #fc8181;
+        }
+
+        @media (max-width: 768px) {
+            .converter-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .container {
+                padding: 20px;
+            }
+        }
+
+        .example-btn {
+            background: #805ad5;
+            color: white;
+        }
+
+        .example-btn:hover {
+            background: #6b46c1;
+            transform: translateY(-2px);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>JSX/TSX to Registry JSON Converter</h1>
+            <p>Convert your React components to shadcn/ui registry format</p>
+        </div>
+
+        <div id="status" class="status"></div>
+
+        <div class="converter-grid">
+            <div class="input-section">
+                <h2 class="section-title">
+                    <svg class="icon" viewBox="0 0 24 24">
+                        <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z"/>
+                    </svg>
+                    Component Metadata
+                </h2>
+                
+                <div class="metadata-grid">
+                    <div class="form-group">
+                        <label for="componentName">Component Name</label>
+                        <input type="text" id="componentName" placeholder="checkbox" />
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="componentTitle">Title</label>
+                        <input type="text" id="componentTitle" placeholder="Checkbox" />
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="componentAuthor">Author</label>
+                        <input type="text" id="componentAuthor" placeholder="Your Name" />
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="componentType">Type</label>
+                        <select id="componentType">
+                            <option value="registry:ui">registry:ui</option>
+                            <option value="registry:component">registry:component</option>
+                            <option value="registry:block">registry:block</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="componentDescription">Description</label>
+                    <textarea id="componentDescription" rows="3" placeholder="A smooth, animated checkbox component..."></textarea>
+                </div>
+                
+                <div class="dependencies-section">
+                    <label>Dependencies</label>
+                    <div class="dependencies-input">
+                        <input type="text" id="dependencyInput" placeholder="Add dependency (e.g., motion)" />
+                        <button type="button" class="btn btn-secondary" onclick="addDependency()">Add</button>
+                    </div>
+                    <div id="dependencyTags" class="dependency-tags"></div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="jsxInput">JSX/TSX Code</label>
+                    <textarea id="jsxInput" class="jsx-input" placeholder="Paste your JSX/TSX component code here..."></textarea>
+                </div>
+            </div>
+
+            <div class="output-section">
+                <h2 class="section-title">
+                    <svg class="icon" viewBox="0 0 24 24">
+                        <path d="M5,3C3.89,3 3,3.89 3,5V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19V12H19V19H5V5H12V3H5M17.78,4C17.61,4 17.43,4.07 17.3,4.2L16.08,5.41L18.58,7.91L19.8,6.7C20.06,6.44 20.06,6 19.8,5.75L18.25,4.2C18.12,4.07 17.95,4 17.78,4M15.37,6.12L8,13.5V16H10.5L17.87,8.62L15.37,6.12Z"/>
+                    </svg>
+                    Generated JSON
+                </h2>
+                
+                <textarea id="jsonOutput" class="json-output" readonly placeholder="Generated registry JSON will appear here..."></textarea>
+            </div>
+        </div>
+
+        <div class="controls">
+            <button class="btn btn-primary" onclick="convertToJson()">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12,2A10,10 0 0,1 22,12A10,10 0 0,1 12,22A10,10 0 0,1 2,12A10,10 0 0,1 12,2M11,16.5L18,9.5L16.59,8.09L11,13.67L7.91,10.59L6.5,12L11,16.5Z"/>
+                </svg>
+                Convert to JSON
+            </button>
+            
+            <button class="btn btn-success" onclick="copyToClipboard()">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M19,21H8V7H19M19,5H8A2,2 0 0,0 6,7V21A2,2 0 0,0 8,23H19A2,2 0 0,0 21,21V7A2,2 0 0,0 19,5M16,1H4A2,2 0 0,0 2,3V17H4V3H16V1Z"/>
+                </svg>
+                Copy JSON
+            </button>
+            
+            <button class="btn btn-secondary" onclick="clearAll()">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M19,6.41L17.59,5L12,10.59L6.41,5L5,6.41L10.59,12L5,17.59L6.41,19L12,13.41L17.59,19L19,17.59L13.41,12L19,6.41Z"/>
+                </svg>
+                Clear All
+            </button>
+            
+            <button class="btn example-btn" onclick="loadExample()">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z"/>
+                </svg>
+                Load Example
+            </button>
+        </div>
+    </div>
+
+    <script>
+        let dependencies = [];
+
+        function showStatus(message, type) {
+            const status = document.getElementById('status');
+            status.textContent = message;
+            status.className = `status ${type}`;
+            status.style.display = 'block';
+            
+            setTimeout(() => {
+                status.style.display = 'none';
+            }, 3000);
+        }
+
+        function addDependency() {
+            const input = document.getElementById('dependencyInput');
+            const dependency = input.value.trim();
+            
+            if (dependency && !dependencies.includes(dependency)) {
+                dependencies.push(dependency);
+                input.value = '';
+                renderDependencies();
+            }
+        }
+
+        function removeDependency(index) {
+            dependencies.splice(index, 1);
+            renderDependencies();
+        }
+
+        function renderDependencies() {
+            const container = document.getElementById('dependencyTags');
+            container.innerHTML = dependencies.map((dep, index) => `
+                <div class="tag">
+                    ${dep}
+                    <button class="tag-remove" onclick="removeDependency(${index})">×</button>
+                </div>
+            `).join('');
+        }
+
+        function escapeJsonString(str) {
+            return str.replace(/\\/g, '\\\\')
+                     .replace(/"/g, '\\"')
+                     .replace(/\n/g, '\\n')
+                     .replace(/\r/g, '\\r')
+                     .replace(/\t/g, '\\t');
+        }
+
+        function convertToJson() {
+            const name = document.getElementById('componentName').value.trim();
+            const title = document.getElementById('componentTitle').value.trim();
+            const description = document.getElementById('componentDescription').value.trim();
+            const author = document.getElementById('componentAuthor').value.trim();
+            const type = document.getElementById('componentType').value;
+            const jsxCode = document.getElementById('jsxInput').value.trim();
+
+            if (!name || !title || !jsxCode) {
+                showStatus('Please fill in Name, Title, and JSX Code fields', 'error');
+                return;
+            }
+
+            // Determine file extension based on JSX content
+            const fileExtension = jsxCode.includes('interface ') || jsxCode.includes(': ') ? 'tsx' : 'jsx';
+            
+            const registryItem = {
+                "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+                "name": name,
+                "title": title,
+                "description": description,
+                "author": author,
+                "type": type,
+                "dependencies": dependencies,
+                "devDependencies": [],
+                "registryDependencies": [],
+                "cssVars": {
+                    "dark": {},
+                    "light": {}
+                },
+                "files": [
+                    {
+                        "path": `${name}.${fileExtension}`,
+                        "content": escapeJsonString(jsxCode),
+                        "type": type
+                    }
+                ]
+            };
+
+            const jsonOutput = JSON.stringify(registryItem, null, 2);
+            document.getElementById('jsonOutput').value = jsonOutput;
+            
+            showStatus('JSON generated successfully!', 'success');
+        }
+
+        function copyToClipboard() {
+            const jsonOutput = document.getElementById('jsonOutput');
+            if (!jsonOutput.value) {
+                showStatus('No JSON to copy. Please convert first.', 'error');
+                return;
+            }
+
+            jsonOutput.select();
+            document.execCommand('copy');
+            showStatus('JSON copied to clipboard!', 'success');
+        }
+
+        function clearAll() {
+            document.getElementById('componentName').value = '';
+            document.getElementById('componentTitle').value = '';
+            document.getElementById('componentDescription').value = '';
+            document.getElementById('componentAuthor').value = '';
+            document.getElementById('componentType').value = 'registry:ui';
+            document.getElementById('jsxInput').value = '';
+            document.getElementById('jsonOutput').value = '';
+            dependencies = [];
+            renderDependencies();
+            showStatus('All fields cleared!', 'success');
+        }
+
+        function loadExample() {
+            document.getElementById('componentName').value = 'checkbox';
+            document.getElementById('componentTitle').value = 'Checkbox';
+            document.getElementById('componentDescription').value = 'A smooth, animated checkbox component with customizable color, size, and duration.';
+            document.getElementById('componentAuthor').value = 'Reche Soares';
+            document.getElementById('componentType').value = 'registry:ui';
+            
+            dependencies = ['motion'];
+            renderDependencies();
+            
+            const exampleJsx = `"use client";
+import { motion } from "motion/react";
+
+interface CheckBoxProps {
+  checked: boolean;
+  onClick: () => void;
+  size?: number;
+  color?: string;
+  duration?: number;
+}
+
+export const CheckBox = ({
+  checked,
+  onClick,
+  size = 32,
+  color = "#00e599",
+  duration = 1,
+}: CheckBoxProps) => {
+  return (
+    <div className="select-none cursor-pointer" onClick={onClick}>
+      <svg width={size} height={size} viewBox="0 0 40 40" fill="none">
+        <motion.path
+          d="M 2.45 24.95 V 33.95 C 2.45 35.9382 4.0618 37.55 6.05 37.55 H 33.95 C 35.9382 37.55 37.55 35.9382 37.55 33.95 V 6.05 C 37.55 4.0618 35.9382 2.45 33.95 2.45 H 6.05 C 4.0618 2.45 2.45 4.0618 2.45 6.05 V 22.0617 C 2.45 23.0443 2.8516 23.9841 3.5616 24.6633 L 10.0451 30.8649 C 11.5404 32.2952 13.9308 32.1735 15.2731 30.5988 L 36.2 6.05"
+          stroke={color}
+          strokeLinecap="round"
+          strokeWidth={3}
+          animate={{
+            strokeDasharray: checked ? 150 : 132,
+            strokeDashoffset: checked ? -134 : 0,
+          }}
+          transition={{
+            duration,
+            ease: "easeInOut",
+          }}
+        />
+      </svg>
+    </div>
+  );
+};`;
+            
+            document.getElementById('jsxInput').value = exampleJsx;
+            showStatus('Example loaded successfully!', 'success');
+        }
+
+        // Allow Enter key to add dependencies
+        document.getElementById('dependencyInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                addDependency();
+            }
+        });
+
+        // Initialize
+        renderDependencies();
+    </script>
+</body>
+</html>
